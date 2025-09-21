@@ -8,6 +8,7 @@ interface Todo {
 
 type Action =
     | { type: 'toggle'; id: number }
-    | { type: 'add'; title: string };
+    | { type: 'add'; title: string }
+    | { type: 'delete'; id: number };
 
 export type { Todo, Action, Filter };

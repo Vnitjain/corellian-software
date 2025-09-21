@@ -3,6 +3,7 @@ import {
   View, Flex, Heading, Link, Avatar, ListView, Item, Checkbox, Divider, DialogTrigger, Dialog, Content, ButtonGroup, Button, TextField, Form, ActionButton
 } from '@adobe/react-spectrum';
 import Add from '@spectrum-icons/workflow/Add';
+import Delete from '@spectrum-icons/workflow/Delete';
 import type { Action, Filter, Todo } from './types/Types';
 
 
@@ -20,6 +21,8 @@ function reducer(state: Todo[], action: Action): Todo[] {
       return state.map(t => t.id === action.id ? { ...t, completed: !t.completed } : t);
     case 'add':
       return [...state, { id: nextId++, title: action.title, completed: false }];
+    case 'delete':
+      return state.filter(t => t.id !== action.id);
     default:
       return state;
   }
@@ -107,13 +110,16 @@ function TodoList({
       <ListView aria-label="Todos" selectionMode="none" density="compact">
         {filtered.map(todo => (
           <Item key={todo.id} textValue={todo.title}>
-            <Checkbox
-              isSelected={todo.completed}
-              onChange={() => dispatch({ type: 'toggle', id: todo.id })}
-            >
-              {todo.title}
-            </Checkbox>
-          </Item>
+              <Checkbox
+                isSelected={todo.completed}
+                onChange={() => dispatch({ type: 'toggle', id: todo.id })}
+              >
+                {todo.title}
+              </Checkbox>
+              <ActionButton isQuiet onPress={() => dispatch({ type: 'delete', id: todo.id })}>
+                <Delete />
+              </ActionButton>
+            </Item>
         ))}
       </ListView>
     </View>
