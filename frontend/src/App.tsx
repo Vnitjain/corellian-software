@@ -1,7 +1,8 @@
 import { useMemo, useReducer, useState } from 'react';
 import {
-  View, Flex, Heading, Link, Avatar, ListView, Item, Checkbox, Divider,
+  View, Flex, Heading, Link, Avatar, ListView, Item, Checkbox, Divider, DialogTrigger, Dialog, Content, ButtonGroup, Button, TextField, Form, ActionButton
 } from '@adobe/react-spectrum';
+import Add from '@spectrum-icons/workflow/Add';
 import type { Action, Filter, Todo } from './types/Types';
 
 
@@ -17,19 +18,29 @@ function reducer(state: Todo[], action: Action): Todo[] {
   switch (action.type) {
     case 'toggle':
       return state.map(t => t.id === action.id ? { ...t, completed: !t.completed } : t);
+    case 'add':
+      return [...state, { id: nextId++, title: action.title, completed: false }];
     default:
       return state;
   }
 }
 
 /* -------------- Top navigation -------------- */
-function TopNav({ filter, setFilter }: { filter: Filter, setFilter: (filter: Filter) => void }) {
+function TopNav({ filter, setFilter, dispatch }: { filter: Filter, setFilter: (filter: Filter) => void, dispatch: React.Dispatch<Action> }) {
   const is = (path: Filter) => filter === path;
+  const [title, setTitle] = useState('');
 
   const linkProps = (to: Filter) => ({
     onPress: () => setFilter(to),
     UNSAFE_className: `nav-link ${is(to) ? 'active' : ''}`,
   });
+
+  const handleAdd = () => {
+    if (title.trim() !== '') {
+      dispatch({ type: 'add', title });
+      setTitle('');
+    }
+  };
 
   return (
     <View position="sticky" top={0} backgroundColor="gray-50" padding="size-200" zIndex={1}>
@@ -44,8 +55,34 @@ function TopNav({ filter, setFilter }: { filter: Filter, setFilter: (filter: Fil
           <Link {...linkProps('completed')}>Completed</Link>
         </Flex>
 
-        {/* Right: user avatar */}
-        <Avatar alt="User" UNSAFE_className="user-avatar">A</Avatar>
+        {/* Right: user avatar and add button */}
+        <Flex gap="size-100" alignItems="center">
+          <DialogTrigger>
+            <ActionButton isQuiet>
+              <Add />
+            </ActionButton>
+            {(close) => (
+              <Dialog>
+                <Heading>Add Task</Heading>
+                <Content>
+                  <Form onSubmit={(e) => { e.preventDefault(); handleAdd(); close(); }}>
+                    <TextField
+                      label="Title"
+                      value={title}
+                      onChange={setTitle}
+                      autoFocus
+                    />
+                  </Form>
+                </Content>
+                <ButtonGroup>
+                  <Button variant="secondary" onPress={close}>Cancel</Button>
+                  <Button variant="cta" onPress={() => { handleAdd(); close(); }}>Save</Button>
+                </ButtonGroup>
+              </Dialog>
+            )}
+          </DialogTrigger>
+          <Avatar alt="User" UNSAFE_className="user-avatar">A</Avatar>
+        </Flex>
       </Flex>
     </View>
   );
@@ -90,7 +127,7 @@ export default function App() {
 
   return (
     <View>
-      <TopNav filter={filter} setFilter={setFilter} />
+      <TopNav filter={filter} setFilter={setFilter} dispatch={dispatch} />
       <Divider size="S" />
       <TodoList todos={todos} dispatch={dispatch} filter={filter} />
     </View>

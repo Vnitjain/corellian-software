@@ -7,6 +7,7 @@ interface Todo {
 }
 
 type Action =
-    | { type: 'toggle'; id: number };
+    | { type: 'toggle'; id: number }
+    | { type: 'add'; title: string };
 
 export type { Todo, Action, Filter };
