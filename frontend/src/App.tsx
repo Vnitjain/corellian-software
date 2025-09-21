@@ -1,6 +1,4 @@
-import { useMemo, useReducer } from 'react';
-import { Routes, Route, Link as RouterLink, useLocation } from 'react-router-dom';
-import type { ComponentType } from 'react';
+import { useMemo, useReducer, useState } from 'react';
 import {
   View, Flex, Heading, Link, Avatar, ListView, Item, Checkbox, Divider,
 } from '@adobe/react-spectrum';
@@ -25,14 +23,11 @@ function reducer(state: Todo[], action: Action): Todo[] {
 }
 
 /* -------------- Top navigation -------------- */
-function TopNav() {
-  const location = useLocation();
-  const is = (path: string) => location.pathname === path;
+function TopNav({ filter, setFilter }: { filter: Filter, setFilter: (filter: Filter) => void }) {
+  const is = (path: Filter) => filter === path;
 
-  // Spectrum's Link accepts `elementType` as a React component type
-  const linkProps = (to: string) => ({
-    elementType: RouterLink as ComponentType<any>,
-    to,
+  const linkProps = (to: Filter) => ({
+    onPress: () => setFilter(to),
     UNSAFE_className: `nav-link ${is(to) ? 'active' : ''}`,
   });
 
@@ -44,9 +39,9 @@ function TopNav() {
 
         {/* Center: filter links */}
         <Flex gap="size-300" alignItems="center">
-          <Link {...linkProps('/')}>All</Link>
-          <Link {...linkProps('/active')}>Active</Link>
-          <Link {...linkProps('/completed')}>Completed</Link>
+          <Link {...linkProps('all')}>All</Link>
+          <Link {...linkProps('active')}>Active</Link>
+          <Link {...linkProps('completed')}>Completed</Link>
         </Flex>
 
         {/* Right: user avatar */}
@@ -56,7 +51,7 @@ function TopNav() {
   );
 }
 
-/* -------------- List (filtered by route) -------------- */
+/* -------------- List (filtered by selection) -------------- */
 function TodoList({
   todos, filter, dispatch,
 }: {
@@ -91,16 +86,13 @@ function TodoList({
 /* -------------- App -------------- */
 export default function App() {
   const [todos, dispatch] = useReducer(reducer, initial);
+  const [filter, setFilter] = useState<Filter>('all');
 
   return (
     <View>
-      <TopNav />
+      <TopNav filter={filter} setFilter={setFilter} />
       <Divider size="S" />
-      <Routes>
-        <Route path="/" element={<TodoList todos={todos} dispatch={dispatch} filter="all" />} />
-        <Route path="/active" element={<TodoList todos={todos} dispatch={dispatch} filter="active" />} />
-        <Route path="/completed" element={<TodoList todos={todos} dispatch={dispatch} filter="completed" />} />
-      </Routes>
+      <TodoList todos={todos} dispatch={dispatch} filter={filter} />
     </View>
   );
 }
